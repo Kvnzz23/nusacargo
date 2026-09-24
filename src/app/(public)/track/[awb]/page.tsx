@@ -5,6 +5,18 @@ import { StatusBadge } from "@/components/ui/status-badge";
 
 type Props = { params: Promise<{ awb: string }> };
 
+// Helper function untuk format tanggal aman
+function formatEtaDate(etaISO: string): string {
+  const formattedISO =
+    etaISO.includes("+") || etaISO.endsWith("Z") ? etaISO : `${etaISO}+07:00`;
+
+  return new Date(formattedISO).toLocaleString("id-ID", {
+    timeZone: "Asia/Jakarta",
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+}
+
 export async function generateMetadata({ params }: Props) {
   const { awb } = await params;
   return {
@@ -19,6 +31,9 @@ export default async function TrackPage({ params }: Props) {
 
   if (!shipment) notFound();
 
+  // Format tanggal dilakukan di level logika komponen
+  const formattedEta = formatEtaDate(shipment.etaISO);
+
   return (
     <section aria-labelledby="judul" className="mx-auto max-w-lg space-y-4 p-6">
       <h1 id="judul" className="text-lg font-semibold">
@@ -28,9 +43,11 @@ export default async function TrackPage({ params }: Props) {
         <p className="text-sm">
           {shipment.origin} → {shipment.destination}
         </p>
-        <StatusBadge status={shipment.status} />
+        <div>
+          <StatusBadge status={shipment.status} />
+        </div>
         <p className="text-xs text-foreground/70">
-          Estimasi tiba: {new Date(shipment.etaISO).toLocaleString("id-ID")}
+          Estimasi tiba: {formattedEta}
         </p>
       </div>
     </section>
